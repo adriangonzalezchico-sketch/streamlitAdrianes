@@ -4,6 +4,7 @@ import datetime
 import matplotlib.pyplot as plt
 
 # Carga inicial de los datasets base de clientes y pedidos
+# no cargamos reviews dado que solo se usa una vez en el 4
 dfCustomersBase = pd.read_csv('./streamlit_resources/customers_dataset.csv')
 dfOrdersBase = pd.read_csv('./streamlit_resources/orders_dataset.csv')
 
@@ -18,7 +19,6 @@ def loadData(fechaMin, fechaMax):
     return df_clientes_agrupados
 
 #########################################################################################
-
 # Calcula porcentajes de pedidos y el ratio de pedidos por cliente único para cada ciudad
 def loadData2(df):
     dfOrdersCustomersCity = df.copy()
@@ -28,10 +28,9 @@ def loadData2(df):
     dfOrdersCustomersCity['proporcion_pedidos_cliente'] = round(dfOrdersCustomersCity['orders_count'] / dfOrdersCustomersCity['customer_count'],2)
     dfOrdersCustomersCity.reset_index()
 
-    return dfOrdersCustomersCity[['customer_city','orders_count','customer_count','orders_percent', 'proporcion_pedidos_cliente']]
+    return dfOrdersCustomersCity[['customer_state', 'customer_city','orders_count','customer_count','orders_percent', 'proporcion_pedidos_cliente']]
 
 #########################################################################################
-
 # Obtiene la cantidad y el porcentaje de pedidos entregados tarde con respecto al total de cada ciudad
 def loadData3A(dfEjercicio2):
     dfRetrasos = pd.merge(dfCustomersBase,dfOrdersBase, on='customer_id')
@@ -41,18 +40,18 @@ def loadData3A(dfEjercicio2):
         pd.to_datetime(dfRetrasos['order_estimated_delivery_date'])
     )
 
-    dfTotalRetrasosCiudad = dfRetrasos.groupby('customer_city')['pedidos_tarde'].sum().reset_index().sort_values('pedidos_tarde', ascending=False)
+    dfTotalRetrasosCiudad = dfRetrasos.groupby(['customer_state', 'customer_city'])['pedidos_tarde'].sum().reset_index().sort_values('pedidos_tarde', ascending=False)
 
     dfTotalRetrasosCiudadCopia = dfTotalRetrasosCiudad.copy()
 
-    dfTotalRetrasosCiudadCopia = pd.merge(dfTotalRetrasosCiudadCopia, dfEjercicio2[['customer_city', 'orders_count']], on='customer_city', how='left')
+    dfTotalRetrasosCiudadCopia = pd.merge(dfTotalRetrasosCiudadCopia, dfEjercicio2[['customer_state', 'customer_city', 'orders_count']], on=['customer_state', 'customer_city'], how='left')
 
     dfTotalRetrasosCiudadCopia['porcentaje_retrasados'] = (dfTotalRetrasosCiudadCopia['pedidos_tarde'] / dfTotalRetrasosCiudadCopia['orders_count']) * 100
+    dfTotalRetrasosCiudadCopia['city_state'] = dfTotalRetrasosCiudadCopia['customer_city'] + " (" + dfTotalRetrasosCiudadCopia['customer_state'] + ")"
 
     return dfTotalRetrasosCiudadCopia.sort_values(by=['pedidos_tarde','porcentaje_retrasados'], ascending=[False, False])
 
 ######
-
 # Calcula el promedio de días de retraso que tienen los pedidos que llegaron tarde en cada ciudad
 def loadData3B():
     dfTodosPedidosTiempo = pd.merge(dfCustomersBase, dfOrdersBase, on='customer_id')
@@ -63,12 +62,12 @@ def loadData3B():
     ).dt.total_seconds() / (24 * 3600)).round()
 
     dfTodosPedidosTiempoTarde = dfTodosPedidosTiempo[dfTodosPedidosTiempo['tiempo_retraso'] > 0]
-    dfTodosPedidosTiempoTardeCity = dfTodosPedidosTiempoTarde.groupby('customer_city')['tiempo_retraso'].mean().reset_index().sort_values('tiempo_retraso', ascending=False).rename(columns={'tiempo_retraso': 'tiempo_retraso_medio'})
-    
+    dfTodosPedidosTiempoTardeCity = dfTodosPedidosTiempoTarde.groupby(['customer_state', 'customer_city'])['tiempo_retraso'].mean().reset_index().sort_values('tiempo_retraso', ascending=False).rename(columns={'tiempo_retraso': 'tiempo_retraso_medio'})
+    dfTodosPedidosTiempoTardeCity['city_state'] = dfTodosPedidosTiempoTardeCity['customer_city'] + " (" + dfTodosPedidosTiempoTardeCity['customer_state'] + ")"
+
     return dfTodosPedidosTiempoTardeCity
 
 ############################################################
-
 # Carga las reseñas y calcula la puntuación media y el total de opiniones por estado (solo de pedidos a tiempo)
 def loadData4():
     dfReviews = pd.read_csv('./streamlit_resources/order_reviews_dataset.csv')
@@ -156,7 +155,7 @@ st.write(datos_retrasos)
 
 st.bar_chart(
     datos_retrasos.head(numero_filas), 
-    x='customer_city', 
+    x='city_state', 
     y='pedidos_tarde'
 )
 
@@ -171,9 +170,11 @@ st.write(datos_dias_retraso)
 
 st.bar_chart(
     datos_dias_retraso.head(numero_filas), 
-    x='customer_city', 
+    x='city_state', 
     y='tiempo_retraso_medio'
 )
+
+st.markdown('> Las ciudades grandes como Sao Paulo tienen un porcentaje de retrasos entre 5 y 25% porque los repartidores locales están saturados por el volumen de paquetes. En cambio, los pueblos lejanos como Montanha tienen esperas larguísimas porque las rutas de transporte hasta allí están rotas o fallan por completo')
 
 ########################## Ejercicio 4 ################################
 
