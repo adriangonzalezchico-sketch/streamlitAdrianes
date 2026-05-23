@@ -38,7 +38,7 @@ Calcula y representa:
 - Tiempo medio de retraso en días
 
 Además, al representar esta información, el dashboard deberá incluir un autodiagnóstico que indique la razón más probable del problema.
-> 'Las ciudades grandes como Sao Paulo tienen un porcentaje de retrasos entre 5 y 25% porque los repartidores locales están saturados por el volumen de paquetes. En cambio, los pueblos lejanos como Montanha tienen esperas larguísimas porque las rutas de transporte hasta allí están rotas o fallan por completo. Por otra parte, el estado con los retrasos más largos de media es Alagoas (AL), por lo que sería util tenerlo en cuenta al dar una fecha de entrega aproximada'
+> 'Las ciudades grandes como Sao Paulo tienen un porcentaje de retrasos entre 5 y 25% porque los repartidores locales están saturados por el volumen de paquetes. En cambio, los pueblos lejanos como Montanha tienen esperas larguísimas porque las rutas de transporte hasta allí están rotas o fallan por completo'
 ---
 
 ### 4. Reviews y satisfacción del cliente
